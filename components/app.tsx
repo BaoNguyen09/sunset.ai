@@ -435,13 +435,31 @@ export default function App() {
   );
 
   // Effects
-  //
+  // ENsure workspaceIdRef is updated with latest value of workspaceId
   useEffect(() => {
     workspaceIdRef.current = workspaceId;
     if (workspaceId) {
       localStorage.setItem(WORKSPACE_ID_KEY, workspaceId);
     }
   }, [workspaceId]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlChatId = urlParams.get('id');
+      
+      if (urlChatId) {
+        // Check if this chat exists in conversations
+        const chatExists = conversations.find((c) => c.id === urlChatId);
+        if (chatExists) {
+          setActiveConversation(urlChatId);
+          setIsNewConversation(chatExists.isDraft ?? false);
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [conversations]);
 
   // Ensure active conversation remains valid
   useEffect(() => {
@@ -1029,6 +1047,12 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const urlChatId = urlParams.get('id');
     if (urlChatId) return; // Let the URL-based selection handle it
+
+    // On mobile, if we're at root URL, don't auto-select - let user see the list
+    if (isMobileView && !urlChatId) {
+      console.log('📱 Mobile: At root URL, skipping auto-selection to show list');
+      return;
+    }
 
     // Only auto-select on initial load if no conversation is active
     if (!activeConversation) {

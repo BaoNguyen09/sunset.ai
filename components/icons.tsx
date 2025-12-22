@@ -506,4 +506,7 @@ export const Icons = {
   image: ({ size = 16, ...props }: IconProps) => (
     <ImageLucide className="text-muted-foreground" size={size} {...props} />
   ),
+  edit: ({ size = 16, ...props }: IconProps) => (
+    <Pencil className="text-muted-foreground" size={size} {...props} />
+  ),
 };
