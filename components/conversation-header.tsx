@@ -97,6 +97,7 @@ function RecipientPill({
           onMouseDown={(e) => e.preventDefault()}
           className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
           aria-label={`Remove ${trimmedRecipient}`}
+          type="button"
         >
           <Icons.close className="h-3 w-3" />
         </button>
@@ -460,23 +461,7 @@ export function ConversationHeader({
       return;
     }
 
-    // Desktop: clicking header in compact mode enters edit mode
-    if (!isNewChat && !isEditMode && !isMobileView) {
-      setIsEditMode(true);
-      const recipients =
-        activeConversation?.recipients.map((r) => r.name).join(",") || "";
-      setRecipientInput(`${recipients},`);
-    } 
-    // Desktop: clicking header in new chat compact mode enters edit mode
-    else if (isNewChat && showCompactNewChat && !isMobileView) {
-      setShowCompactNewChat?.(false);
-      setShowResults(true);
-      setSearchValue("");
-      setSelectedIndex(-1);
-      if (!recipientInput.split(",").filter((r) => r.trim()).length) {
-        setRecipientInput("");
-      }
-    }
+    // No edit mode - recipients are just the chat name now
     // Mobile: clicking header in compact mode does nothing (handled by ContactDrawer)
   };
 
@@ -773,6 +758,7 @@ export function ConversationHeader({
                 }}
                 className="rounded-sm relative flex items-center gap-2"
                 aria-label="Back to conversations"
+                type="button"
               >
                 <Icons.back size={32} />
                 {unreadCount ? (
@@ -789,37 +775,11 @@ export function ConversationHeader({
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center gap-1 flex-wrap py-6">
-                  <div className="absolute left-16 top-9">
-                    <span className="text-base sm:text-sm text-muted-foreground">
-                      To:
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 flex-1 items-center pl-4">
-                    {renderRecipients()}
-                    {recipientInput.split(",").filter((r) => r.trim()).length <
-                      4 && (
-                      <RecipientSearch
-                        searchValue={searchValue}
-                        setSearchValue={setSearchValue}
-                        showResults={showResults}
-                        selectedIndex={selectedIndex}
-                        handleKeyDown={handleKeyDown}
-                        handlePersonSelect={handlePersonSelect}
-                        handleAddContact={handleAddContact}
-                        setSelectedIndex={setSelectedIndex}
-                        setShowResults={setShowResults}
-                        updateRecipients={updateRecipients}
-                        isMobileView={isMobileView}
-                        recipientInput={recipientInput}
-                        isValidating={isValidating}
-                        userId={userId}
-                      />
-                    )}
-                  </div>
+                  {/* Recipient editing removed - recipients are just chat name now */}
                 </div>
               </div>
             ) : (
-              // Mobile avatar view
+              // Mobile view - just show chat name
               <div
                 className="flex absolute left-1/2 -translate-x-1/2 transform"
                 onClick={handleHeaderClick}
@@ -827,39 +787,30 @@ export function ConversationHeader({
               >
                 <div className="flex flex-col items-center">
                   <div className="flex items-center py-2">
-                    <MobileAvatars
-                      recipients={
-                        isNewChat
-                          ? recipientInput
-                              .split(",")
-                              .filter((r) => r.trim())
-                              .map((name) => ({ name }))
-                          : activeConversation?.recipients || []
-                      }
-                    />
+                    {isMobileView && !isNewChat && activeConversation ? (
+                      <>
+                        <MobileAvatars
+                          recipients={activeConversation.recipients || []}
+                        />
+                      </>
+                    ) : null}
                   </div>
                   <span className="text-xs flex items-center">
                     {isMobileView && !isNewChat && activeConversation && (
                       <ContactDrawer
-                        recipientCount={activeConversation.recipients.length}
-                        recipients={
-                          activeConversation?.recipients.map((recipient) => {
-                            const initialContacts = createInitialContactsForUser(userId || 'default');
-                            const contact = initialContacts.find(
-                              (p) => p.name === recipient.name
-                            );
-                            return {
-                              name: recipient.name,
-                              avatar: recipient.avatar,
-                              bio: contact?.bio,
-                              title: contact?.title,
-                            };
-                          }) || []
-                        }
+                        recipientCount={1}
+                        recipients={[
+                          {
+                            name: activeConversation.name || 'Chat',
+                            avatar: activeConversation.recipients[0]?.avatar,
+                            bio: activeConversation.recipients[0]?.bio,
+                            title: activeConversation.recipients[0]?.title,
+                          }
+                        ]}
                         onUpdateName={onUpdateConversationName}
                         conversationName={activeConversation.name}
                         onAddContact={() => {
-                          setIsEditMode(true);
+                          // No-op: recipients are just chat name now
                         }}
                         onHideAlertsChange={onHideAlertsChange}
                         hideAlerts={activeConversation.hideAlerts}
@@ -919,66 +870,15 @@ export function ConversationHeader({
       ) : (
         // Desktop View
         <div
-          className="flex items-center justify-between px-4 relative h-16"
+          className="flex items-center justify-center px-4 relative h-16"
           onClick={handleHeaderClick}
           data-chat-header="true"
         >
-          {/* Desktop new chat or edit view */}
-          <div className="flex items-center gap-2 flex-1">
-            {(isNewChat && !showCompactNewChat) || isEditMode ? (
-              <div className="flex-1" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-1 flex-wrap py-6">
-                  <span className="text-base sm:text-sm text-muted-foreground">
-                    To:
-                  </span>
-                  <div className="flex flex-wrap gap-1 flex-1 items-center">
-                    {renderRecipients()}
-                    {recipientInput.split(",").filter((r) => r.trim()).length <
-                      4 && (
-                      <RecipientSearch
-                        searchValue={searchValue}
-                        setSearchValue={setSearchValue}
-                        showResults={showResults}
-                        selectedIndex={selectedIndex}
-                        handleKeyDown={handleKeyDown}
-                        handlePersonSelect={handlePersonSelect}
-                        handleAddContact={handleAddContact}
-                        setSelectedIndex={setSelectedIndex}
-                        setShowResults={setShowResults}
-                        updateRecipients={updateRecipients}
-                        isMobileView={isMobileView}
-                        recipientInput={recipientInput}
-                        isValidating={isValidating}
-                        userId={userId}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Desktop compact view
-              <div
-                className="flex"
-                onClick={handleHeaderClick}
-                data-chat-header="true"
-              >
-                <span className="text-sm">
-                  <span className="text-muted-foreground">To: </span>
-                  {(() => {
-                    if (!isNewChat && activeConversation?.name) {
-                      return activeConversation.name;
-                    }
-                    const recipients =
-                      activeConversation?.recipients.map((r) => r.name) || [];
-                    return recipients.length <= 3
-                      ? recipients.join(", ")
-                      : `${recipients[0]}, ${recipients[1]}, ${
-                          recipients[2]
-                        } +${recipients.length - 3}`;
-                  })()}
-                </span>
-              </div>
-            )}
+          {/* Desktop view - centered chat name */}
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <span className="text-base font-medium">
+              {activeConversation?.name || 'New Chat'}
+            </span>
           </div>
           
           {/* Desktop Action Buttons - only show for Supermemory chat */}
@@ -1011,7 +911,7 @@ export function ConversationHeader({
 
           {/* Desktop Action Buttons - only show for Profile chat */}
           {!isNewChat && activeConversation && activeConversation.recipients.some(r => r.name === 'Profile') && (
-            <div className="ml-auto flex gap-1">
+            <div className="absolute right-4 flex gap-1">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

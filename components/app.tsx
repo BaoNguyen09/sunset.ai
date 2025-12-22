@@ -291,14 +291,19 @@ export default function App() {
 
         if (index !== -1) {
           const existing = prev[index];
-          const recipients = buildRecipientsForConversation(
-            existing,
-            trimmedRecipients,
-          );
+          const conversationName = trimmedRecipients.join(', ');
+          // Recipients should just match the chat name
+          const recipients = [{
+            id: existing.recipients[0]?.id || generateUUID(),
+            name: conversationName,
+            avatar: existing.recipients[0]?.avatar,
+            bio: existing.recipients[0]?.bio,
+            title: existing.recipients[0]?.title,
+          }];
           const updatedConversation: Conversation = {
             ...existing,
             recipients,
-            name: trimmedRecipients.join(', '),
+            name: conversationName,
             isDraft: false,
             lastMessageTime: existing.lastMessageTime || now,
           };
@@ -308,14 +313,16 @@ export default function App() {
           return updated;
         }
 
-        const recipients = buildRecipientsForConversation(
-          undefined,
-          trimmedRecipients,
-        );
+        const conversationName = trimmedRecipients.join(', ');
+        // Recipients should just match the chat name
+        const recipients = [{
+          id: generateUUID(),
+          name: conversationName,
+        }];
         const newConversation: Conversation = {
           id: candidateConversationId,
           recipients,
-          name: trimmedRecipients.join(', '),
+          name: conversationName,
           messages: [],
           lastMessageTime: now,
           unreadCount: 0,
@@ -371,14 +378,19 @@ export default function App() {
           return prev;
         }
         const existing = prev[index];
-        const recipients = buildRecipientsForConversation(
-          existing,
-          trimmedRecipients,
-        );
+        const conversationName = trimmedRecipients.join(', ');
+        // Recipients should just match the chat name
+        const recipients = [{
+          id: existing.recipients[0]?.id || generateUUID(),
+          name: conversationName,
+          avatar: existing.recipients[0]?.avatar,
+          bio: existing.recipients[0]?.bio,
+          title: existing.recipients[0]?.title,
+        }];
         const updatedConversation: Conversation = {
           ...existing,
           recipients,
-          name: trimmedRecipients.join(', '),
+          name: conversationName,
         };
         const updated = [...prev];
         updated[index] = updatedConversation;
@@ -386,7 +398,7 @@ export default function App() {
         return updated;
       });
     },
-    [activeConversation, buildRecipientsForConversation],
+    [activeConversation],
   );
 
   // Memoized conversation selection method
@@ -876,13 +888,14 @@ export default function App() {
                 }
               : null;
 
+            const chatName = chat.title || 'Untitled Chat';
             byId.set(chat.id, {
               id: chat.id,
-              name: chat.title || 'Untitled Chat',
+              name: chatName,
               recipients: [
                 {
                   id: 'ai',
-                  name: 'Supermemory',
+                  name: chatName, // Recipient name matches chat name
                   bio: 'Workspace AI assistant',
                   title: 'AI',
                 },
@@ -1482,13 +1495,14 @@ export default function App() {
       const data = await res.json();
 
       // Create a new conversation object for the local state
+      const chatName = data.chat.title;
       const newConversation: Conversation = {
         id: data.chat.id,
-        name: data.chat.title,
+        name: chatName,
         recipients: [
           {
             id: 'ai',
-            name: 'Supermemory',
+            name: chatName, // Recipient name matches chat name
             bio: 'Workspace AI assistant',
             title: 'AI',
           },
