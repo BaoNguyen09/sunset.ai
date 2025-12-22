@@ -13,9 +13,11 @@ import type { VisibilityType } from '@/components/visibility-selector';
 export function useChatVisibility({
   chatId,
   initialVisibilityType,
+  workspaceId,
 }: {
   chatId: string;
   initialVisibilityType: VisibilityType;
+  workspaceId?: string | null;
 }) {
   const { mutate, cache } = useSWRConfig();
   const history: ChatHistory = cache.get('/api/history')?.data;
@@ -37,7 +39,15 @@ export function useChatVisibility({
 
   const setVisibilityType = (updatedVisibilityType: VisibilityType) => {
     setLocalVisibility(updatedVisibilityType);
-    mutate(unstable_serialize(getChatHistoryPaginationKey));
+    
+    // Get workspaceId from chat data if not provided, or from localStorage
+    const chatWorkspaceId = workspaceId || 
+      history?.chats.find((chat) => chat.id === chatId)?.workspaceId ||
+      (typeof window !== 'undefined' ? localStorage.getItem('sunsetLastWorkspace') : null);
+    
+    if (chatWorkspaceId) {
+      mutate(unstable_serialize(getChatHistoryPaginationKey(chatWorkspaceId)));
+    }
 
     updateChatVisibility({
       chatId: chatId,
