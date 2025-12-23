@@ -88,6 +88,38 @@ export function ChatArea({
   const effectiveTheme = theme === 'system' ? systemTheme : theme;
   const currentReactionActor = 'me';
 
+  // Stable hue per sender so colors stay consistent across renders
+  const getSenderHue = (sender: string) => {
+    let hash = 0;
+    for (let i = 0; i < sender.length; i++) {
+      hash = (hash << 5) - hash + sender.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash) % 360;
+  };
+
+  const getSenderChipStyle = (sender: string) => {
+    if (sender === 'Supermemory') {
+      return {
+        background:
+          'linear-gradient(180deg, #5ba8ff 0%, #1e68ff 100%)',
+        color: '#ffffff',
+        borderColor: '#1e68ff',
+        boxShadow: '0 2px 6px rgba(30, 104, 255, 0.35)',
+      };
+    }
+    const hue = getSenderHue(sender || 'member');
+    const bg = `hsl(${hue}, 70%, 92%)`;
+    const border = `hsl(${hue}, 65%, 82%)`;
+    const text = `hsl(${hue}, 45%, 28%)`;
+    return {
+      backgroundColor: bg,
+      color: text,
+      borderColor: border,
+      boxShadow: `0 2px 6px hsla(${hue}, 60%, 50%, 0.25)`,
+    };
+  };
+
   // Helper to determine which actor identifier should be used when creating/checking reactions.
   // For now, UI reactions are attributed to the current user ("me"). Change this if you use a different actor id.
   const getReactionActorForMessage = (_sender: string) => {
@@ -935,10 +967,12 @@ export function ChatArea({
                     <div className="group relative flex items-start gap-1">
                       {/* Sender name - only on first split */}
                       {splitIndex === 0 &&
-                        !isMe &&
-                        activeConversation?.recipients.length > 1 && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                            {message.sender}
+                        !isMe && (
+                          <div
+                            className="text-[11px] font-medium inline-flex items-center gap-2 mb-1 px-2 py-0.5 rounded-full border"
+                            style={getSenderChipStyle(message.sender)}
+                          >
+                            {message.sender || 'Member'}
                           </div>
                         )}
 

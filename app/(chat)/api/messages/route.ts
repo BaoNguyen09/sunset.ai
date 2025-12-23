@@ -4,6 +4,7 @@ import {
   getChatById,
   getMessagesByChatId,
   getWorkspaceMember,
+  getUsersByIds,
 } from '@/lib/db/queries';
 
 export async function GET(request: Request) {
@@ -35,6 +36,19 @@ export async function GET(request: Request) {
 
   const dbMessages = await getMessagesByChatId({ id: chatId });
 
+  // Build lookup of other participants' emails to use as display names
+  const otherUserIds = Array.from(
+    new Set(
+      dbMessages
+        .map((m: any) => m.userId)
+        .filter(
+          (id: string | null | undefined) => id && id !== session.user.id,
+        ),
+    ),
+  );
+  const otherUsers = await getUsersByIds({ ids: otherUserIds });
+  const userEmailById = new Map(otherUsers.map((u: any) => [u.id, u.email]));
+
   const messages = dbMessages.map((m: any) => {
     const text = Array.isArray(m.parts)
       ? m.parts
@@ -56,7 +70,7 @@ export async function GET(request: Request) {
         ? 'Supermemory'
         : m.userId === session.user.id
           ? 'me'
-          : 'Member';
+          : userEmailById.get(m.userId) || 'Member';
 
     return {
       id: m.id,

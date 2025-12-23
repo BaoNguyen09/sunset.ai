@@ -219,8 +219,7 @@ export class MessageQueue {
       if (reactionMatches.length > 0 && lastUserMessage) {
         accumulatedText = accumulatedText.replace(reactionRegex, '').trim();
 
-        const reactionSender =
-          task.conversation.recipients?.[0]?.name ?? "Supermemory";
+        const reactionSender = "Supermemory";
         const reactions: Reaction[] = reactionMatches.map(match => ({
           type: match[1].toLowerCase() as ReactionType,
           sender: reactionSender,
@@ -239,8 +238,7 @@ export class MessageQueue {
         const newMessage: Message = {
           id: newMessageId,
           content: accumulatedText,
-          sender:
-            task.conversation.recipients?.[0]?.name ?? "Supermemory",
+          sender: "Supermemory",
           timestamp: new Date().toISOString(),
         };
 

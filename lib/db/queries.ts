@@ -426,6 +426,15 @@ export async function getMessagesByChatId({ id }: { id: string }) {
   }
 }
 
+export async function getUsersByIds({ ids }: { ids: string[] }) {
+  if (ids.length === 0) return [];
+  try {
+    return await db.select().from(user).where(inArray(user.id, ids));
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get users by ids');
+  }
+}
+
 export async function voteMessage({
   chatId,
   messageId,
