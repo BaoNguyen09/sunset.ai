@@ -109,10 +109,7 @@ export default function App() {
         }
         draftRemoved = true;
         const updated = prev.filter((conv) => conv.id !== conversationId);
-        localStorage.setItem(
-          conversationKey,
-          JSON.stringify(updated),
-        );
+        localStorage.setItem(conversationKey, JSON.stringify(updated));
         return updated;
       });
 
@@ -293,13 +290,15 @@ export default function App() {
           const existing = prev[index];
           const conversationName = trimmedRecipients.join(', ');
           // Recipients should just match the chat name
-          const recipients = [{
-            id: existing.recipients[0]?.id || generateUUID(),
-            name: conversationName,
-            avatar: existing.recipients[0]?.avatar,
-            bio: existing.recipients[0]?.bio,
-            title: existing.recipients[0]?.title,
-          }];
+          const recipients = [
+            {
+              id: existing.recipients[0]?.id || generateUUID(),
+              name: conversationName,
+              avatar: existing.recipients[0]?.avatar,
+              bio: existing.recipients[0]?.bio,
+              title: existing.recipients[0]?.title,
+            },
+          ];
           const updatedConversation: Conversation = {
             ...existing,
             recipients,
@@ -315,10 +314,12 @@ export default function App() {
 
         const conversationName = trimmedRecipients.join(', ');
         // Recipients should just match the chat name
-        const recipients = [{
-          id: generateUUID(),
-          name: conversationName,
-        }];
+        const recipients = [
+          {
+            id: generateUUID(),
+            name: conversationName,
+          },
+        ];
         const newConversation: Conversation = {
           id: candidateConversationId,
           recipients,
@@ -380,13 +381,15 @@ export default function App() {
         const existing = prev[index];
         const conversationName = trimmedRecipients.join(', ');
         // Recipients should just match the chat name
-        const recipients = [{
-          id: existing.recipients[0]?.id || generateUUID(),
-          name: conversationName,
-          avatar: existing.recipients[0]?.avatar,
-          bio: existing.recipients[0]?.bio,
-          title: existing.recipients[0]?.title,
-        }];
+        const recipients = [
+          {
+            id: existing.recipients[0]?.id || generateUUID(),
+            name: conversationName,
+            avatar: existing.recipients[0]?.avatar,
+            bio: existing.recipients[0]?.bio,
+            title: existing.recipients[0]?.title,
+          },
+        ];
         const updatedConversation: Conversation = {
           ...existing,
           recipients,
@@ -459,7 +462,7 @@ export default function App() {
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const urlChatId = urlParams.get('id');
-      
+
       if (urlChatId) {
         // Check if this chat exists in conversations
         const chatExists = conversations.find((c) => c.id === urlChatId);
@@ -566,7 +569,7 @@ export default function App() {
         if (chatId) {
           // Check if this is a Profile chat (client-side only, not in DB)
           const matchingWorkspace = data.workspaces.find(
-            (w: any) => getWorkspaceSpecificProfileId(w.id) === chatId
+            (w: any) => getWorkspaceSpecificProfileId(w.id) === chatId,
           );
 
           if (matchingWorkspace) {
@@ -583,56 +586,56 @@ export default function App() {
             // Not a Profile chat - fetch from API
             try {
               const chatRes = await fetch(`/api/chat/${chatId}`);
-            if (chatRes.ok) {
-              const chatData = await chatRes.json();
-              // Check if this workspace exists in the user's workspaces
-              const chatWorkspace = data.workspaces.find(
-                (w: any) => w.id === chatData.chat?.workspaceId,
-              );
-              if (chatWorkspace) {
-                selectedWorkspaceId = chatData.chat.workspaceId;
-                console.log(
-                  '[App] Selected workspace based on chat ID:',
-                  selectedWorkspaceId,
+              if (chatRes.ok) {
+                const chatData = await chatRes.json();
+                // Check if this workspace exists in the user's workspaces
+                const chatWorkspace = data.workspaces.find(
+                  (w: any) => w.id === chatData.chat?.workspaceId,
                 );
-                if (!cancelled) {
-                  setWorkspaceAccessError(null); // Clear any previous errors
+                if (chatWorkspace) {
+                  selectedWorkspaceId = chatData.chat.workspaceId;
+                  console.log(
+                    '[App] Selected workspace based on chat ID:',
+                    selectedWorkspaceId,
+                  );
+                  if (!cancelled) {
+                    setWorkspaceAccessError(null); // Clear any previous errors
+                  }
+                } else {
+                  // User doesn't have access to this workspace
+                  console.warn(
+                    '[App] User does not have access to the workspace for this chat',
+                  );
+                  console.log('[App] Setting workspace access error');
+                  if (!cancelled) {
+                    setWorkspaceAccessError(
+                      "You don't have access to this workspace. Please ask the workspace owner to invite you.",
+                    );
+                    console.log('[App] Workspace access error set');
+                  }
+                  selectedWorkspaceId = data.workspaces[0]?.id ?? null;
                 }
-              } else {
-                // User doesn't have access to this workspace
-                console.warn(
-                  '[App] User does not have access to the workspace for this chat',
-                );
-                console.log('[App] Setting workspace access error');
+              } else if (chatRes.status === 403 || chatRes.status === 404) {
+                // User doesn't have access or chat doesn't exist
+                console.warn('[App] Access denied or chat not found');
                 if (!cancelled) {
                   setWorkspaceAccessError(
-                    "You don't have access to this workspace. Please ask the workspace owner to invite you.",
+                    chatRes.status === 403
+                      ? "You don't have access to this chat. Please ask the workspace owner to invite you."
+                      : "This chat doesn't exist or has been deleted.",
                   );
-                  console.log('[App] Workspace access error set');
                 }
                 selectedWorkspaceId = data.workspaces[0]?.id ?? null;
-              }
-            } else if (chatRes.status === 403 || chatRes.status === 404) {
-              // User doesn't have access or chat doesn't exist
-              console.warn('[App] Access denied or chat not found');
-              if (!cancelled) {
-                setWorkspaceAccessError(
-                  chatRes.status === 403
-                    ? "You don't have access to this chat. Please ask the workspace owner to invite you."
-                    : "This chat doesn't exist or has been deleted.",
+              } else {
+                console.warn(
+                  '[App] Failed to fetch chat details, using first workspace',
                 );
+                selectedWorkspaceId = data.workspaces[0]?.id ?? null;
               }
-              selectedWorkspaceId = data.workspaces[0]?.id ?? null;
-            } else {
-              console.warn(
-                '[App] Failed to fetch chat details, using first workspace',
-              );
+            } catch (error) {
+              console.error('[App] Error fetching chat details:', error);
               selectedWorkspaceId = data.workspaces[0]?.id ?? null;
             }
-          } catch (error) {
-            console.error('[App] Error fetching chat details:', error);
-            selectedWorkspaceId = data.workspaces[0]?.id ?? null;
-          }
           }
         }
         // Priority 2: If invited to a workspace, use that one
@@ -658,7 +661,9 @@ export default function App() {
         }
         // Priority 3: If there's no chat ID in the URL, check localStorage for last visited workspace
         else if (lastWorkspaceId) {
-          const workspaceExists = data.workspaces.find((w: any) => w.id === lastWorkspaceId);
+          const workspaceExists = data.workspaces.find(
+            (w: any) => w.id === lastWorkspaceId,
+          );
 
           if (workspaceExists) {
             selectedWorkspaceId = lastWorkspaceId;
@@ -1010,7 +1015,7 @@ export default function App() {
       hasLoadedWorkspaceChats,
       isSwitching: isSwitchingWorkspace.current,
       activeConversation,
-      conversationsCount: conversations.length
+      conversationsCount: conversations.length,
     });
 
     if (!workspaceId) return;
@@ -1072,7 +1077,7 @@ export default function App() {
       console.log('🆕 INITIAL LOAD PATH', {
         activeConversation,
         hasWorkspace: !!workspaceId,
-        hasConversations: conversations.length
+        hasConversations: conversations.length,
       });
       // Try reading from localStorage first, then setup, then Profile
       const chatIdKey = getChatIdStorageKey();
@@ -1085,7 +1090,7 @@ export default function App() {
           console.log('✅ Saved chat exists in conversations:', !!savedChat, {
             savedChatId,
             totalConversations: conversations.length,
-            conversationIds: conversations.map(c => c.id)
+            conversationIds: conversations.map((c) => c.id),
           });
           if (savedChat) {
             console.log('🎯 Selecting saved chat:', savedChatId);
@@ -1121,7 +1126,7 @@ export default function App() {
       if (chatIdKey) {
         localStorage.setItem(chatIdKey, activeConversation);
         console.log(
-          `[App] Saved active chat "${activeConversation}" to localStorage`
+          `[App] Saved active chat "${activeConversation}" to localStorage`,
         );
       }
     }
