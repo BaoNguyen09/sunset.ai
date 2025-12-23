@@ -985,37 +985,18 @@ export function ConversationHeader({
                 data-chat-header="true"
               >
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center py-2">
-                    {isMobileView && !isNewChat && activeConversation ? (
-                      <>
+                  <div className="flex flex-col items-center py-2">
+                    <div className="flex items-center">
+                      {isMobileView && !isNewChat && activeConversation ? (
                         <MobileAvatars
                           recipients={activeConversation.recipients || []}
                         />
-                      </>
-                    ) : null}
+                      ) : null}
+                    </div>
+                    <div className="text-sm font-medium mt-1">
+                      {isProfileChat ? 'Profile' : activeConversation?.name || 'Chat'}
+                    </div>
                   </div>
-                  <span className="text-xs flex items-center">
-                    {isMobileView && !isNewChat && activeConversation && (
-                      <ContactDrawer
-                        recipientCount={1}
-                        recipients={[
-                          {
-                            name: activeConversation.name || 'Chat',
-                            avatar: activeConversation.recipients[0]?.avatar,
-                            bio: activeConversation.recipients[0]?.bio,
-                            title: activeConversation.recipients[0]?.title,
-                          }
-                        ]}
-                        onUpdateName={onUpdateConversationName}
-                        conversationName={activeConversation.name}
-                        onAddContact={() => {
-                          // No-op: recipients are just chat name now
-                        }}
-                        onHideAlertsChange={onHideAlertsChange}
-                        hideAlerts={activeConversation.hideAlerts}
-                      />
-                    )}
-                  </span>
                 </div>
               </div>
             )}
@@ -1161,7 +1142,7 @@ export function ConversationHeader({
           )}
 
           {/* Mobile Action Buttons - only show for Profile chat */}
-          {!isNewChat && activeConversation && activeConversation.recipients.some(r => r.name === 'Profile') && (
+          {isProfileChat && (
             <div className="absolute right-4 top-8 flex gap-1">
               <button
                 type="button"
@@ -1337,7 +1318,7 @@ export function ConversationHeader({
           )}
 
           {/* Desktop Action Buttons - only show for Profile chat */}
-          {!isNewChat && activeConversation && activeConversation.recipients.some(r => r.name === 'Profile') && (
+          {isProfileChat && (
             <div className="absolute right-4 flex gap-1">
               <button
                 type="button"
@@ -1360,6 +1341,8 @@ export function ConversationHeader({
       <MemoryGraphDialog
         open={showMemoryGraph}
         onOpenChange={setShowMemoryGraph}
+        workspaceId={activeConversation?.workspaceId ?? null}
+        defaultChatId={activeConversation?.id ?? null}
       />
     </div>
   );
