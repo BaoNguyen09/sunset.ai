@@ -104,7 +104,6 @@ function RecipientPill({
           onMouseDown={(e) => e.preventDefault()}
           className="ml-1.5 hover:text-red-600 dark:hover:text-red-400"
           aria-label={`Remove ${trimmedRecipient}`}
-          type="button"
         >
           <Icons.close className="h-3 w-3" />
         </button>
@@ -937,7 +936,6 @@ export function ConversationHeader({
                 }}
                 className="rounded-sm relative flex items-center gap-2"
                 aria-label="Back to conversations"
-                type="button"
               >
                 <Icons.back size={32} />
                 {unreadCount ? (
