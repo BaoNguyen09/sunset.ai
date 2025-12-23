@@ -32,6 +32,10 @@ export function InviteButton({
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [members, setMembers] = useState<
+    Array<{ id: string; email: string; joinedAt: string }>
+  >([]);
 
   const fetchExistingInvitation = async () => {
     if (!currentWorkspaceId) {
@@ -157,6 +161,33 @@ export function InviteButton({
     setInvitationUrl(null);
     setCopied(false);
     fetchExistingInvitation();
+    fetchMembers();
+  };
+
+  const fetchMembers = async () => {
+    if (!currentWorkspaceId) return;
+    setMembersLoading(true);
+    try {
+      const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast({
+          type: 'error',
+          description:
+            data.message || 'Failed to load workspace members',
+        });
+        return;
+      }
+      const data = await res.json();
+      setMembers(data.members || []);
+    } catch (error) {
+      toast({
+        type: 'error',
+        description: 'Failed to load workspace members',
+      });
+    } finally {
+      setMembersLoading(false);
+    }
   };
 
   return (
@@ -216,6 +247,36 @@ export function InviteButton({
                     </>
                   )}
                 </Button>
+
+                <div className="pt-3 border-t border-border">
+                  <div className="text-sm font-medium text-muted-foreground mb-3">
+                    Workspace members
+                  </div>
+                  {membersLoading ? (
+                    <div className="text-sm text-muted-foreground">
+                      Loading members...
+                    </div>
+                  ) : members.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">
+                      No members found.
+                    </div>
+                  ) : (
+                    <ul className="max-h-[40vh] overflow-y-auto text-sm divide-y divide-border">
+                      {members.map((member) => (
+                        <li
+                          key={member.id}
+                          className="flex items-center justify-between gap-4 py-2"
+                        >
+                          <span className="truncate">{member.email}</span>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            Joined{' '}
+                            {new Date(member.joinedAt).toLocaleDateString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="text-center py-4 text-muted-foreground">
