@@ -404,7 +404,7 @@ export function ChatArea({
 
                 return (
                   <div
-                    key={`${message.id}-split-${splitIndex}`}
+                    key={`${message.id}-${index}-split-${splitIndex}`}
                     className={cn(
                       'flex',
                       isMe ? 'justify-end' : 'justify-start',
@@ -873,7 +873,7 @@ export function ChatArea({
 
             return (
               <div
-                key={`${message.id}-split-${splitIndex}`}
+                key={`${message.id}-${index}-split-${splitIndex}`}
                 className={cn(
                   'flex',
                   isMe ? 'justify-end' : 'justify-start',

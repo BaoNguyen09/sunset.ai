@@ -77,7 +77,7 @@ export function Nav({ onNewChat, isMobileView, isScrolled, currentWorkspaceId, o
           />
         </div>
         <div className="flex items-center gap-1">
-          <InviteButton />
+          <InviteButton currentWorkspaceId={currentWorkspaceId} />
           <ThemeToggle />
         </div>
       </div>
