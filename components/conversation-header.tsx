@@ -332,6 +332,28 @@ export function ConversationHeader({
   const [documentLimit, setDocumentLimit] = useState(5000);
   const [syncingConnectionId, setSyncingConnectionId] = useState<string | null>(null);
   const [connectedToastShown, setConnectedToastShown] = useState(false);
+  const isProfileChat = useMemo(() => {
+    const name = (activeConversation?.name || '').trim().toLowerCase();
+    const id = (activeConversation?.id || '').trim().toLowerCase();
+    const recipHasProfile =
+      activeConversation?.recipients?.some(
+        (r) => (r.name || '').trim().toLowerCase() === 'profile',
+      ) || false;
+    return (
+      name === 'profile' ||
+      id === 'profile' ||
+      id === 'profile-chat' ||
+      recipHasProfile
+    );
+  }, [activeConversation?.id, activeConversation?.name, activeConversation?.recipients]);
+
+  const displayChatName = useMemo(() => {
+    if (isProfileChat) return 'Profile';
+    return activeConversation?.name ?? 'New Chat';
+  }, [activeConversation?.name, isProfileChat]);
+
+  // Show connect for all chats except Profile
+  const showConnect = useMemo(() => !isProfileChat, [isProfileChat]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1000,8 +1022,8 @@ export function ConversationHeader({
           </div>
           
           {/* Mobile Action Buttons - only show for Supermemory chat */}
-          {!isNewChat && activeConversation && activeConversation.recipients.some(r => r.name === 'Supermemory') && (
-            <div className="absolute right-4 top-8 flex gap-1">
+          {showConnect && (
+            <div className="absolute right-4 top-8 flex gap-1 z-10">
               <DropdownMenu open={openConnectMenu} onOpenChange={handleOpenChange}>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -1159,20 +1181,23 @@ export function ConversationHeader({
       ) : (
         // Desktop View
         <div
-          className="flex items-center justify-center px-4 relative h-16"
+          className="flex items-center px-4 h-14"
           onClick={handleHeaderClick}
           data-chat-header="true"
         >
-          {/* Desktop view - centered chat name */}
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <span className="text-base font-medium">
-              {activeConversation?.name || 'New Chat'}
+          {/* Left slot */}
+          <div className="flex-1 min-w-0" />
+
+          {/* Center title */}
+          <div className="flex-1 flex justify-center">
+            <span className="text-base font-medium text-center truncate max-w-[40ch]">
+              {displayChatName}
             </span>
           </div>
           
-          {/* Desktop Action Buttons - only show for Supermemory chat */}
-          {!isNewChat && activeConversation && activeConversation.recipients.some(r => r.name === 'Supermemory') && (
-            <div className="ml-auto flex gap-1">
+          {/* Right actions */}
+          {showConnect ? (
+            <div className="flex-1 flex justify-end items-center gap-2 z-10">
               <DropdownMenu open={openConnectMenu} onOpenChange={handleOpenChange}>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -1251,7 +1276,7 @@ export function ConversationHeader({
                                     handleSyncConnection(targetId, conn.provider);
                                   }
                                 }}
-                              className="p-1 rounded hover:bg-accent text-foreground inline-flex items-center gap-1"
+                                className="p-1 rounded hover:bg-accent text-foreground inline-flex items-center gap-1"
                                 aria-label="Sync connection"
                                 title="Sync connection"
                                 disabled={syncingConnectionId === (conn.connectionId || conn.id)}
@@ -1259,10 +1284,10 @@ export function ConversationHeader({
                                 {syncingConnectionId === (conn.connectionId || conn.id) ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                <>
-                                  <RefreshCw className="h-4 w-4" />
-                                  <span className="text-xs">Sync</span>
-                                </>
+                                  <>
+                                    <RefreshCw className="h-4 w-4" />
+                                    <span className="text-xs">Sync</span>
+                                  </>
                                 )}
                               </button>
                               <button
@@ -1307,6 +1332,8 @@ export function ConversationHeader({
                 <Trash2 className="h-5 w-5" />
               </button>
             </div>
+          ) : (
+            <div className="flex-1" />
           )}
 
           {/* Desktop Action Buttons - only show for Profile chat */}
