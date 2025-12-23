@@ -311,8 +311,10 @@ export function Sidebar({
           bottomMargin="0px"
         >
           <div className={`${isMobileView ? 'w-full' : 'w-[320px]'} px-2`}>
-            <div className="flex items-center gap-2 mb-2">
-              <SearchBar value={searchTerm} onChange={onSearchChange} />
+            <div className="flex items-center gap-1 mb-2">
+              <div className="flex-1">
+                <SearchBar value={searchTerm} onChange={onSearchChange} />
+              </div>
               <button
                 onClick={onNewChat}
                 className="flex-shrink-0 p-1 rounded-md hover:bg-muted-foreground/10 dark:hover:bg-accent/80 transition-colors group"
