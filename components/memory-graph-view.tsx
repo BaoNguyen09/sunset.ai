@@ -3,6 +3,13 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { MemoryGraph } from "@supermemory/memory-graph";
 import type { DocumentWithMemories } from "@/lib/types/supermemory";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MemoryGraphViewProps {
   isActive?: boolean; // Whether the profile chat is currently active
@@ -206,22 +213,23 @@ export function MemoryGraphView({
 
   return (
     <div className="h-full w-full relative bg-gradient-to-b from-gray-900 to-black">
-      <div className="absolute top-0 left-0 right-0 z-50 p-4 flex justify-end">
-        <div className="relative">
-          <select
-            className="bg-white text-black rounded-md px-3 py-2 min-w-[240px]"
+      <div className="absolute top-0 left-0 z-50 p-3 flex justify-start">
+        <div className="relative max-w-[10rem] w-full sm:w-auto">
+          <Select
             value={selectedChatId ?? ""}
-            onChange={(e) => setSelectedChatId(e.target.value)}
+            onValueChange={(val) => setSelectedChatId(val)}
           >
-            <option value="" disabled>
-              {selectedChatTitle}
-            </option>
-            {channels.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title || "Untitled Chat"}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="bg-white text-black rounded-md px-3 py-2 min-w-[160px] sm:min-w-[200px]">
+              <SelectValue placeholder={selectedChatTitle} />
+            </SelectTrigger>
+            <SelectContent>
+              {channels.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.title || "Untitled Chat"}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       {hasInitialized && documents.length === 0 && !isLoading && (
