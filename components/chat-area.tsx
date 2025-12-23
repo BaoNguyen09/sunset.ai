@@ -265,10 +265,25 @@ export function ChatArea({
     const conversationChanged = prevConversationIdRef.current !== conversationId;
     prevConversationIdRef.current = conversationId;
 
-    // Scroll instantly when switching conversations, smooth scroll for new messages
-    messagesEndRef.current?.scrollIntoView({
-      behavior: conversationChanged ? 'instant' : 'smooth'
-    });
+    const endEl = messagesEndRef.current;
+    if (!endEl) return;
+
+    // Always scroll when switching conversations
+    if (conversationChanged) {
+      endEl.scrollIntoView({ behavior: 'instant' });
+      return;
+    }
+
+    // For new messages, only auto-scroll if the last message is near the bottom
+    if (typeof window === 'undefined') return;
+
+    const rect = endEl.getBoundingClientRect();
+    const distanceFromBottom = rect.bottom - window.innerHeight;
+    const NEAR_BOTTOM_THRESHOLD_PX = 120;
+
+    if (distanceFromBottom <= NEAR_BOTTOM_THRESHOLD_PX) {
+      endEl.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [activeConversation?.messages, conversationId]);
 
   useEffect(() => {

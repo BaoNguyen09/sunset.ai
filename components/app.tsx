@@ -1006,11 +1006,28 @@ export default function App() {
         if (cancelled) return;
 
         setConversations((prev) =>
-          prev.map((c) =>
-            c.id === activeConversation
-              ? { ...c, messages: data.messages ?? [] }
-              : c,
-          ),
+          prev.map((c) => {
+            if (c.id !== activeConversation) return c;
+
+            const incoming = data.messages ?? [];
+            const current = c.messages ?? [];
+
+            // Avoid unnecessary updates that can trigger scroll jumps:
+            // only replace messages if something actually changed.
+            const sameLength = incoming.length === current.length;
+            const lastIncoming = incoming[incoming.length - 1];
+            const lastCurrent = current[current.length - 1];
+            const sameLastId =
+              lastIncoming && lastCurrent
+                ? lastIncoming.id === lastCurrent.id
+                : lastIncoming === lastCurrent;
+
+            if (sameLength && sameLastId) {
+              return c;
+            }
+
+            return { ...c, messages: incoming };
+          }),
         );
       } catch (e) {
         console.error('[App] Failed to poll messages:', e);
