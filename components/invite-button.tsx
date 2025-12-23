@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from './toast';
 import {
   Dialog,
@@ -22,36 +22,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Users, Copy, Check } from 'lucide-react';
 
-export function InviteButton() {
+export function InviteButton({
+  currentWorkspaceId,
+}: {
+  currentWorkspaceId: string | null;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
-
-  // Fetch workspace ID on mount
-  useEffect(() => {
-    let cancelled = false;
-    async function loadWorkspace() {
-      try {
-        const res = await fetch('/api/workspaces');
-        if (!res.ok) return;
-        const data = await res.json();
-        const firstWorkspace = data?.workspaces?.[0]?.id ?? null;
-        if (!cancelled) setWorkspaceId(firstWorkspace);
-      } catch (error) {
-        console.error('[InviteButton] Failed to load workspace:', error);
-      }
-    }
-    loadWorkspace();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const fetchExistingInvitation = async () => {
-    if (!workspaceId) {
+    if (!currentWorkspaceId) {
       toast({
         type: 'error',
         description: 'No workspace found',
@@ -62,7 +45,7 @@ export function InviteButton() {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/invitations?workspaceId=${workspaceId}`);
+      const res = await fetch(`/api/invitations?workspaceId=${currentWorkspaceId}`);
 
       if (!res.ok) {
         const data = await res.json();
@@ -96,7 +79,7 @@ export function InviteButton() {
   };
 
   const generateNewInvitation = async () => {
-    if (!workspaceId) {
+    if (!currentWorkspaceId) {
       toast({
         type: 'error',
         description: 'No workspace found',
@@ -112,7 +95,7 @@ export function InviteButton() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ workspaceId }),
+        body: JSON.stringify({ workspaceId: currentWorkspaceId }),
       });
 
       if (!res.ok) {
