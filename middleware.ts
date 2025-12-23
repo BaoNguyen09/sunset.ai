@@ -29,12 +29,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token) {
-    // Redirect to login page instead of auto-creating guest users
+    // Redirect to register page instead of auto-creating guest users
     // Users can choose to login or register from there
     // Preserve the original URL as a redirect parameter
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname + request.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
+    const registerUrl = new URL('/register', request.url);
+    registerUrl.searchParams.set('redirect', pathname + request.nextUrl.search);
+    return NextResponse.redirect(registerUrl);
   }
 
   const isGuest = guestRegex.test(token?.email ?? '');
