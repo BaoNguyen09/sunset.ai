@@ -148,7 +148,10 @@ export function MemoryGraphDialog({
 
       if (filtered.length > 0) {
         const preferred = defaultChatId && filtered.find((c) => c.id === defaultChatId);
-        setSelectedChatId(preferred?.id ?? filtered[0].id);
+        const nextId = preferred ? preferred.id : filtered[0]?.id ?? null;
+        if (nextId) {
+          setSelectedChatId(nextId);
+        }
       }
     } catch (error) {
       console.error('[MemoryGraphDialog] Failed to load workspace and chats:', error);

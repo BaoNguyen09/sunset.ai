@@ -1341,7 +1341,7 @@ export function ConversationHeader({
       <MemoryGraphDialog
         open={showMemoryGraph}
         onOpenChange={setShowMemoryGraph}
-        workspaceId={activeConversation?.workspaceId ?? null}
+        workspaceId={(activeConversation as any)?.workspaceId ?? null}
         defaultChatId={activeConversation?.id ?? null}
       />
     </div>
