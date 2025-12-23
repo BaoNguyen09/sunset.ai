@@ -983,6 +983,53 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConversation, hasLoadedWorkspaceChats]);
 
+  // Lightweight polling to keep messages in sync when other members send messages.
+  // This avoids needing websockets/SSE while still updating the UI periodically.
+  useEffect(() => {
+    if (!activeConversation) return;
+    if (!hasLoadedWorkspaceChats) return;
+
+    const conv = conversations.find((c) => c.id === activeConversation);
+    if (!conv) return;
+
+    // Skip polling for Profile/system-only conversations
+    const isProfile = conv.recipients.some((r) => r.name === 'Profile');
+    if (isProfile) return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/messages?chatId=${activeConversation}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeConversation
+              ? { ...c, messages: data.messages ?? [] }
+              : c,
+          ),
+        );
+      } catch (e) {
+        console.error('[App] Failed to poll messages:', e);
+      }
+    };
+
+    // Initial poll and interval
+    poll();
+    const intervalId = window.setInterval(poll, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+    // We intentionally exclude `conversations` from deps to avoid resetting the
+    // interval on every message change; we only care when chat or workspace load changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversation, hasLoadedWorkspaceChats]);
+
   // Select chat from URL after workspace chats are loaded (only once)
   useEffect(() => {
     if (!hasLoadedWorkspaceChats) return;
