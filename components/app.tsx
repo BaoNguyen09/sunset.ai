@@ -80,8 +80,6 @@ export default function App() {
   const workspaceIdRef = useRef<string | null>(null);
   const currentActiveChatIdRef = useRef<string | null>(null);
 
-  // const STORAGE_KEY = 'supermemoryConversations';
-  // const CHAT_ID_KEY = 'supermemoryCurrentChatId';
   const WORKSPACE_ID_KEY = 'sunsetLastWorkspace';
   const getConversationsStorageKey = () => {
     const id = workspaceIdRef.current;
@@ -1008,7 +1006,7 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasLoadedWorkspaceChats]);
 
-  // Auto-select Profile chat when switching workspaces or on initial load
+  // Figure out what chat to auto-select when switching workspaces or on initial load
   useEffect(() => {
     console.log('🚀 Auto-select effect running', {
       workspaceId,
@@ -1024,12 +1022,12 @@ export default function App() {
     const profileId = getWorkspaceSpecificProfileId(workspaceId);
     const profileChat = conversations.find((c) => c.id === profileId);
 
-    // If switching workspaces, select Profile chat
+    // When switching workspaces
     if (isSwitchingWorkspace.current) {
       console.log('🔄 WORKSPACE SWITCHING PATH');
       // 1. Try to get the last active chat ID for this workspace from localStorage
-      const chatIdKey = `supermemoryCurrentChatId-${workspaceId}`;
-      const savedChatId = localStorage.getItem(chatIdKey);
+      const chatIdKey = getChatIdStorageKey();
+      const savedChatId = localStorage.getItem(chatIdKey!);
 
       // 2. If we have a saved chat ID, check if that chat exists
       if (savedChatId) {
